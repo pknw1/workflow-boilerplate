@@ -17,10 +17,6 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    env: 
-      SSH_SERVER: ${{ secrets.ssh_server }}
-      SSH_USER: ${{ secrets.ssh_user }}
-      SSH_PASSWORD: ${{ secrets.ssh_password }}
     steps:
       - name: Dynamically set TIMESTAMP environment variable
         run: echo "TIMESTAMP=$(date)" >> $GITHUB_ENV
@@ -30,8 +26,36 @@ jobs:
       - run: echo "${{ env.TIMESTAMP }} - New Branch Push" >> version.txt
       - uses: actions4git/add-commit-push@v1
 
-  transfer_files:
+  modify_footers:
     needs: [update_version]
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check file existence
+        id: check_files
+        uses: andstor/file-existence-action@v1
+        with:
+          files: "footers.sh"
+      - name: Dynamically set TIMESTAMP environment variable
+        run: echo "TIMESTAMP=$(date)" >> $GITHUB_ENV
+      - uses: actions/checkout@v4
+        with:
+          ref: '${{ github.ref_name }}'
+      - name: update footers & version
+        if: steps.check_files.outputs.files_exists == 'true'
+        run: echo "${{ env.TIMESTAMP }} - Modify Content Footers" >> version.txt
+      - name: update  version
+        if: steps.check_files.outputs.files_exists == 'false'
+        run: echo "${{ env.TIMESTAMP }} - No Modify Content Scripts" >> version.txt
+      - name: run footers.sh
+        if: steps.check_files.outputs.files_exists == 'true'
+        run: ./footer.sh
+      - uses: actions4git/add-commit-push@v1
+
+
+  transfer_files:
+    needs: [modify_footers]
     runs-on: ubuntu-latest
     env:
       SSH_SERVER: ${{ secrets.ssh_server }}
