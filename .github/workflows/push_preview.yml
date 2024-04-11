@@ -13,8 +13,6 @@ on:
       - 'project.mobirise'
 
 jobs:
-  env:
-    PRODUCT_NAME: 'downcharmed'
   deploy_preview:
     permissions:
       contents: write
