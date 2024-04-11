@@ -13,7 +13,7 @@ on:
       - 'project.mobirise'
 
 jobs:
-  deploy_preview:
+  update_version:
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -31,9 +31,12 @@ jobs:
       - uses: actions4git/add-commit-push@v1
 
   transfer_files:
+    needs: [update_version]
     runs-on: ubnuntu-latest
     env:
       SSH_SERVER: ${{ secrets.ssh_server }}
+      SSH_USER: ${{ secrets.ssh_user }}
+      SSH_PASSWORD: ${{ secrets.ssh_password }}
     steps:
       - uses: actions/checkout@v4
         with:
