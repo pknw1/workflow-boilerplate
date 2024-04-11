@@ -32,7 +32,7 @@ jobs:
 
   transfer_files:
     needs: [update_version]
-    runs-on: ubnuntu-latest
+    runs-on: ubuntu-latest
     env:
       SSH_SERVER: ${{ secrets.ssh_server }}
       SSH_USER: ${{ secrets.ssh_user }}
