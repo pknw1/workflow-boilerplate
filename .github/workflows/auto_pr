@@ -1,0 +1,32 @@
+name: Update Preview Site for Pull Requests
+on:
+  pull_request:
+    types: [opened, edited]
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    env: 
+      SSH_SERVER: ${{ secrets.ssh_server }}
+      SSH_USER: ${{ secrets.ssh_user }}
+      SSH_PASSWORD: ${{ secrets.ssh_password }}
+    steps:
+      - name: Dynamically set MY_DATE environment variable
+        run: echo "MY_DATE=$(date +%d%m%y)" >> $GITHUB_ENV
+      - name: Test MY_DATE variable
+        run: echo ${{ env.MY_DATE }}
+      - uses: actions/checkout@v4
+        with:
+          ref: '${{ github.ref }}'
+      - name: copy file via ssh password
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ssh_server }}
+          username: ${{ secrets.ssh_user }}
+          password: ${{ secrets.ssh_password }}
+          port: 69
+          source: "*"
+          target: "/content/www/content/downcharmed-preview"
+      - name: Adding markdown
+        run: echo '## New Pull Request Created 🚀' >> $GITHUB_STEP_SUMMARY
+      - run: echo '## https://preview.downcharmed.online' >> $GITHUB_STEP_SUMMARY

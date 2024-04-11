@@ -1,0 +1,41 @@
+name: Create a Pull Request on a branch - Release to Preview
+on:
+  workflow_dispatch:
+
+jobs:
+  manual:
+    runs-on: ubuntu-latest
+    env: 
+      SSH_SERVER: ${{ secrets.ssh_server }}
+      SSH_USER: ${{ secrets.ssh_user }}
+      SSH_PASSWORD: ${{ secrets.ssh_password }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '${{ github.ref_name }}'
+      - name: Dynamically set MY_DATE environment variable
+        run: echo "MY_DATE=$(date +%d%m%y%H%M)" >> $GITHUB_ENV
+      - name: Test MY_DATE variable
+        run: echo ${{ env.MY_DATE }}
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: Preview Release downcharmed-"${{ env.MY_DATE }}"
+          title: downcharmed-"${{ env.MY_DATE }}" Preview
+          body: Preview
+          base: main
+          labels: automated-pr, Clouds & Regions
+          branch: downcharmed-"${{ env.MY_DATE }}"
+          delete-branch: true
+      - name: copy file via ssh password
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ssh_server }}
+          username: ${{ secrets.ssh_user }}
+          password: ${{ secrets.ssh_password }}
+          port: 69
+          source: "*"
+          target: "/content/www/content/downcharmed-preview"
+      - name: Adding markdown
+        run: echo '## New Pull Request Created 🚀' >> $GITHUB_STEP_SUMMARY
+      - run: echo '## https://preview.downcharmed.online' >> $GITHUB_STEP_SUMMARY

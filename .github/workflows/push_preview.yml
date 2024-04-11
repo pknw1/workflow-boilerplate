@@ -1,0 +1,43 @@
+# For any branch except Main, if the Mobirise content has changed
+# transfer the files to the preview site 
+
+name: Push Branch to Preview
+on:
+  push:
+    branches:    
+      - '*'         # matches every branch that doesn't contain a '/'
+      - '*/*'       # matches every branch containing a single '/'
+      - '**'        # matches every branch
+      - '!main'   # excludes master
+    paths:
+      - 'project.mobirise'
+
+jobs:
+  env:
+    PRODUCT_NAME: 'downcharmed'
+  deploy_preview:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    env: 
+      SSH_SERVER: ${{ secrets.ssh_server }}
+      SSH_USER: ${{ secrets.ssh_user }}
+      SSH_PASSWORD: ${{ secrets.ssh_password }}
+    steps:
+      - name: Dynamically set TIMESTAMP environment variable
+        run: echo "TIMESTANP=$(date)" >> $GITHUB_ENV
+      - uses: actions/checkout@v4
+        with:
+          ref: '${{ github.ref_name }}'
+      - run: echo "${{ env.TIMESTAMP }} - New Branch Push" >> version.txt
+      - uses: actions4git/add-commit-push@v1
+
+  transfer_files:
+    runs-on: ubnuntu-latest
+    env:
+      SSH_SERVER: ${{ secrets.ssh_server }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '${{ github.ref_name }}'
+      - run: cat version.txt

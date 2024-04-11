@@ -1,0 +1,30 @@
+name: Create a new branch 
+on:
+  workflow_dispatch:
+
+jobs:
+  version:
+    env:
+      PRODUCT_NAME: 'downcharmed'
+    runs-on: ubuntu-latest
+    steps:
+       - name: Dynamically set MY_DATE environment variable
+         run: echo "MY_DATE=$(date +%d%m%y%H%M)" >> $GITHUB_ENV
+       - uses: actions/checkout@v4
+       - name: Create new branch
+         uses: JosiahSiegel/remote-branch-action@v1.1.0
+         with:
+           branch: "${{ env.PRODUCT_NAME }}-${{ env.MY_DATE }}"
+       - run: echo "New Branch ${{ env.PROUCT_NAME }-}${{ env.MY_DATE }} Created" > version.txt
+       - name: Create Pull Request
+         uses: peter-evans/create-pull-request@v6
+         with:
+           commit-message: "${{ env.PRODUCT_NAME }} New Branch"
+           title: "Created ${{ env.PRODUCT_NAME }}-${{ env.MY_DATE }} Branch"
+           body: "New Branch"
+           base: main
+           labels: automated-pr, Clouds & Regions
+           branch: "${{ env.PROEUCT_NAME }}-${{ env.MY_DATE }}"
+       - name: Adding markdown
+         run: echo '## New Branch Created - ${{ env.PRODUCT_NAME }}-${{ env.MY_DATE}} 🚀' >> $GITHUB_STEP_SUMMARY
+

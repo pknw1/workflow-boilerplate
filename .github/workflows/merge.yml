@@ -1,0 +1,32 @@
+name: Merge Preview to Production
+on:
+  push:
+    branches:
+      - 'main'
+    paths-ignore:
+      - '.github/**'
+  workflow_dispatch:
+
+jobs:
+  prod:
+    runs-on: ubuntu-latest
+    env: 
+      SSH_SERVER: ${{ secrets.ssh_server }}
+      SSH_USER: ${{ secrets.ssh_user }}
+      SSH_PASSWORD: ${{ secrets.ssh_password }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '${{ github.ref_name }}'
+      - run: ./footer.sh
+      - name: copy file via ssh password
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ssh_server }}
+          username: ${{ secrets.ssh_user }}
+          password: ${{ secrets.ssh_password }}
+          port: 69
+          source: "*"
+          target: "/content/www/content/downcharmed"
+      - run: echo '## New Release Created 🚀' >> $GITHUB_STEP_SUMMARY
+      - run: echo '## https://downcharmed.online' >> $GITHUB_STEP_SUMMARY
